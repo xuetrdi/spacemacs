@@ -1,0 +1,17 @@
+# -*- mode: org-mode -*-
+# name: matout
+# key: <matout
+# --
+\begin{displaymath*}
+  \begin{bmatrix*}
+    $1
+  \end{bmatrix*}
+  \otimes
+  \begin{bmatrix*}
+    $2
+  \end{bmatrix*}
+  =
+  \begin{bmatrix*}
+    $3
+  \end{bmatrix*}
+\end{displaymath*}

@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name:bm
+# key:<bm
+# --
+\documentclass{beamer}
+\usepackage{tikz}
+
+\title{}
+\data{\today}
+\author{JinPeng.D}
+
+\begin{document}
+  \begin{frame}
+  \end{frame}
+\end{document}

@@ -1,0 +1,17 @@
+# -*- mode: org-mode -*-
+# name: matin
+# key: <matin
+# --
+\begin{displaymath*}
+  \begin{bmatrix*}
+    $1
+  \end{bmatrix*}
+  \odot
+  \begin{bmatrix*}
+    $2
+  \end{bmatrix*}
+  =
+  \begin{bmatrix*}
+    $3
+  \end{bmatrix*}
+\end{displaymath*}

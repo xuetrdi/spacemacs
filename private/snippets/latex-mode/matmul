@@ -1,0 +1,17 @@
+# -*- mode: org-mode -*-
+# name: matmul
+# key: <matmul
+# --
+\begin{displaymath*}
+  \begin{bmatrix*}
+    $1
+  \end{bmatrix*}
+  \times
+  \begin{bmatrix*}
+    $2
+  \end{bmatrix*}
+  =
+  \begin{bmatrix*}
+    $3
+  \end{bmatrix*}
+\end{displaymath*}

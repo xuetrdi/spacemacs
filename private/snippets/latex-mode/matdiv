@@ -1,0 +1,17 @@
+# -*- mode: org-mode -*-
+# name: matdiv
+# key: <matdiv
+# --
+\begin{displaymath*}
+  \begin{bmatrix*}
+    $1
+  \end{bmatrix*}
+  \div
+  \begin{bmatrix*}
+    $2
+  \end{bmatrix*}
+  =
+  \begin{bmatrix*}
+    $3
+  \end{bmatrix*}
+\end{displaymath*}
