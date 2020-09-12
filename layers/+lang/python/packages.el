@@ -1,6 +1,6 @@
 ;;; packages.el --- Python Layer packages File for Spacemacs
 ;;
-;; Copyright (c) 2012-2019 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2020 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -9,48 +9,50 @@
 ;;
 ;;; License: GPLv3
 
-(setq python-packages
-      '(
-        blacken
-        company
-        counsel-gtags
-        cython-mode
-        dap-mode
-        eldoc
-        evil-matchit
-        flycheck
-        ggtags
-        helm-cscope
-        helm-gtags
-        (helm-pydoc :requires helm)
-        importmagic
-        live-py-mode
-        (nose :location local)
-        org
-        pip-requirements
-        pipenv
-        pippel
-        py-isort
-        pyenv-mode
-        (pylookup :location local)
-        pytest
-        (python :location built-in)
-        pyvenv
-        semantic
-        smartparens
-        stickyfunc-enhance
-        xcscope
-        yapfify
-        ;; packages for anaconda backend
-        anaconda-mode
-        (company-anaconda :requires company)
-        ;; packages for Microsoft LSP backend
-        (lsp-python-ms :requires lsp-mode)
-        ))
+(defconst python-packages
+  '(
+    blacken
+    company
+    counsel-gtags
+    cython-mode
+    dap-mode
+    eldoc
+    evil-matchit
+    flycheck
+    ggtags
+    helm-cscope
+    helm-gtags
+    (helm-pydoc :requires helm)
+    importmagic
+    live-py-mode
+    (nose :location local)
+    org
+    pip-requirements
+    pipenv
+    pippel
+    py-isort
+    pyenv-mode
+    (pylookup :location local)
+    pytest
+    (python :location built-in)
+    pyvenv
+    semantic
+    smartparens
+    stickyfunc-enhance
+    xcscope
+    yapfify
+    ;; packages for anaconda backend
+    anaconda-mode
+    (company-anaconda :requires company)
+    ;; packages for Microsoft LSP backend
+    (lsp-python-ms :requires lsp-mode)
+
+    ;; packages for Microsoft's pyright language server
+    (lsp-pyright :requires lsp-mode)))
 
 (defun python/init-anaconda-mode ()
   (use-package anaconda-mode
-    :if (eq python-backend 'anaconda)
+    :if (eq (spacemacs//python-backend) 'anaconda)
     :defer t
     :init
     (setq anaconda-mode-installation-directory
@@ -94,10 +96,10 @@
 
 (defun python/init-company-anaconda ()
   (use-package company-anaconda
-    :if (eq python-backend 'anaconda)
-    :defer t
-    ;; see `spacemacs//python-setup-anaconda-company'
-    ))
+    :if (eq (spacemacs//python-backend) 'anaconda)
+    :defer t))
+;; see `spacemacs//python-setup-anaconda-company'
+
 
 (defun python/init-blacken ()
   (use-package blacken
@@ -114,13 +116,14 @@
   (use-package cython-mode
     :defer t
     :config
-    (when (eq python-backend 'anaconda)
+    (when (eq (spacemacs//python-backend) 'anaconda)
       (spacemacs/set-leader-keys-for-major-mode 'cython-mode
         "hh" 'anaconda-mode-show-doc
         "gu" 'anaconda-mode-find-references))))
 
 (defun python/pre-init-dap-mode ()
-  (add-to-list 'spacemacs--dap-supported-modes 'python-mode)
+  (pcase (spacemacs//python-backend)
+    (`lsp (add-to-list 'spacemacs--dap-supported-modes 'python-mode)))
   (add-hook 'python-mode-local-vars-hook #'spacemacs//python-setup-dap))
 
 (defun python/post-init-eldoc ()
@@ -303,6 +306,8 @@
                pytest-pdb-one
                pytest-all
                pytest-pdb-all
+               pytest-last-failed
+               pytest-pdb-last-failed
                pytest-module
                pytest-pdb-module)
     :init (spacemacs//bind-python-testing-keys)
@@ -443,6 +448,16 @@ fix this issue."
       (message "lsp-python-ms: Using version at `%s'" lsp-python-ms-dir)
       ;; Use a precompiled exe
       (setq lsp-python-ms-executable (concat lsp-python-ms-dir
+                                             (pcase system-type
+                                               ('gnu/linux "linux-x64/publish/")
+                                               ('darwin "osx-x64/publish/")
+                                               ('windows-nt "win-x64/publish/"))
                                              "Microsoft.Python.LanguageServer"
                                              (and (eq system-type 'windows-nt)
                                                   ".exe"))))))
+
+(defun python/init-lsp-pyright ()
+  (use-package lsp-pyright
+    :if (eq python-lsp-server 'pyright)
+    :ensure nil
+    :defer t))

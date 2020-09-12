@@ -1,6 +1,6 @@
 ;;; funcs.el --- Python Layer functions File for Spacemacs
 ;;
-;; Copyright (c) 2012-2019 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -9,34 +9,43 @@
 ;;
 ;;; License: GPLv3
 
+(defun spacemacs//python-backend ()
+  "Returns selected backend."
+  (if python-backend
+      python-backend
+    (cond
+     ((configuration-layer/layer-used-p 'lsp) 'lsp)
+     (t 'anaconda))))
+
 (defun spacemacs//python-formatter ()
-  "Returns selected python-formatter."
-  (or python-formatter (pcase python-backend
-                         ('lsp 'lsp)
-                         ('anaconda 'yapf))))
+  "Returns selected backend."
+  (if python-formatter
+      python-formatter
+    (cond
+     ((configuration-layer/layer-used-p 'lsp) 'lsp)
+     (t 'yapf))))
 
 (defun spacemacs//python-setup-backend ()
   "Conditionally setup python backend."
   (when python-pipenv-activate (pipenv-activate))
-  (pcase python-backend
+  (pcase (spacemacs//python-backend)
     (`anaconda (spacemacs//python-setup-anaconda))
     (`lsp (spacemacs//python-setup-lsp))))
 
 (defun spacemacs//python-setup-company ()
   "Conditionally setup company based on backend."
-  (pcase python-backend
-    (`anaconda (spacemacs//python-setup-anaconda-company))
-    (`lsp (spacemacs//python-setup-lsp-company))))
+  (pcase (spacemacs//python-backend)
+    (`anaconda (spacemacs//python-setup-anaconda-company))))
 
 (defun spacemacs//python-setup-dap ()
   "Conditionally setup elixir DAP integration."
   ;; currently DAP is only available using LSP
-  (pcase python-backend
+  (pcase (spacemacs//python-backend)
     (`lsp (spacemacs//python-setup-lsp-dap))))
 
 (defun spacemacs//python-setup-eldoc ()
   "Conditionally setup eldoc based on backend."
-  (pcase python-backend
+  (pcase (spacemacs//python-backend)
     ;; lsp setup eldoc on its own
     (`anaconda (spacemacs//python-setup-anaconda-eldoc))))
 
@@ -74,21 +83,9 @@
   "Setup lsp backend."
   (if (configuration-layer/layer-used-p 'lsp)
       (progn
-        (when (eq python-lsp-server 'mspyls)
-          (require 'lsp-python-ms))
+        (cond ((eq python-lsp-server 'mspyls)  (require 'lsp-python-ms))
+              ((eq python-lsp-server 'pyright) (require 'lsp-pyright)))
         (lsp))
-    (message "`lsp' layer is not installed, please add `lsp' layer to your dotfile.")))
-
-(defun spacemacs//python-setup-lsp-company ()
-  "Setup lsp auto-completion."
-  (if (configuration-layer/layer-used-p 'lsp)
-      (progn
-        (spacemacs|add-company-backends
-          :backends company-lsp
-          :modes python-mode
-          :append-hooks nil
-          :call-hooks t)
-        (company-mode))
     (message "`lsp' layer is not installed, please add `lsp' layer to your dotfile.")))
 
 (defun spacemacs//python-setup-lsp-dap ()
@@ -292,7 +289,18 @@ to be called for each testrunner. "
 (defun spacemacs/python-test-last (arg)
   "Re-run the last test command"
   (interactive "P")
-  (spacemacs//python-call-correct-test-function arg '((nose . nosetests-again))))
+  (spacemacs//python-call-correct-test-function arg '((pytest . pytest-again)
+                                                      (nose . nosetests-again))))
+
+(defun spacemacs/python-test-last-failed (arg)
+  "Re-run the tests that last failed."
+  (interactive "P")
+  (spacemacs//python-call-correct-test-function arg '((pytest . pytest-last-failed))))
+
+(defun spacemacs/python-test-pdb-last-failed (arg)
+  "Re-run the tests that last failed in debug mode."
+  (interactive "P")
+  (spacemacs//python-call-correct-test-function arg '((pytest . pytest-pdb-last-failed))))
 
 (defun spacemacs/python-test-all (arg)
   "Run all tests."
@@ -351,6 +359,8 @@ to be called for each testrunner. "
     "tB" 'spacemacs/python-test-pdb-module
     "tb" 'spacemacs/python-test-module
     "tl" 'spacemacs/python-test-last
+    "tf" 'spacemacs/python-test-last-failed
+    "tF" 'spacemacs/python-test-pdb-last-failed
     "tT" 'spacemacs/python-test-pdb-one
     "tt" 'spacemacs/python-test-one
     "tM" 'spacemacs/python-test-pdb-module
@@ -372,7 +382,7 @@ to be called for each testrunner. "
   "Bind the python formatter keys.
 Bind formatter to '==' for LSP and '='for all other backends."
   (spacemacs/set-leader-keys-for-major-mode 'python-mode
-    (if (eq python-backend 'lsp)
+    (if (eq (spacemacs//python-backend) 'lsp)
         "=="
       "=") 'spacemacs/python-format-buffer))
 

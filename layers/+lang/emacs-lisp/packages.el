@@ -32,9 +32,11 @@
         nameless
         overseer
         parinfer
+        rainbow-identifiers
         semantic
         smartparens
         srefactor
+        emr
         ))
 
 (defun emacs-lisp/init-ielm ()
@@ -280,6 +282,9 @@
 (defun emacs-lisp/post-init-parinfer ()
   (add-hook 'emacs-lisp-mode-hook 'parinfer-mode))
 
+(defun emacs-lisp/post-init-rainbow-identifiers ()
+  (add-hook 'emacs-lisp-mode-hook #'colors//rainbow-identifiers-ignore-keywords))
+
 (defun emacs-lisp/post-init-semantic ()
   (add-hook 'emacs-lisp-mode-hook 'semantic-mode)
   (with-eval-after-load 'semantic
@@ -306,3 +311,35 @@
     (spacemacs/set-leader-keys-for-major-mode mode
       "ec" 'spacemacs/eval-current-form-sp
       "es" 'spacemacs/eval-current-symbol-sp)))
+
+(defun emacs-lisp/init-emr ()
+  (use-package emr
+    :config
+    (let ((key-binding-prefixes
+           '(("mr" . "refactor")
+             ("mrd" . "delete")
+             ("mre" . "extract/expand")
+             ("mrf" . "find/function")
+             ("mri" . "insert/inline"))))
+      (mapc (lambda (x) (spacemacs/declare-prefix-for-mode
+                          'emacs-lisp-mode (car x) (cdr x)))
+            key-binding-prefixes))
+    (spacemacs/set-leader-keys-for-major-mode 'emacs-lisp-mode
+      "rfe" #'emr-el-implement-function
+      "rfd" #'emr-el-find-unused-definitions
+
+      "ref" #'emr-el-extract-function
+      "rev" #'emr-el-extract-variable
+      "rel" #'emr-el-extract-to-let
+      "rec" #'emr-el-extract-constant
+      "rea" #'emr-el-extract-autoload
+
+      "riv" #'emr-el-inline-variable
+      "ris" #'emr-el-inline-let-variable
+      "rif" #'emr-el-inline-function
+      "ria" #'emr-el-insert-autoload-directive
+
+      "rdl" #'emr-el-delete-let-binding-form
+      "rdd" #'emr-el-delete-unused-definition
+
+      "ew"  #'emr-el-eval-and-replace)))
