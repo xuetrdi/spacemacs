@@ -1,19 +1,33 @@
 ;;; packages.el --- Passwords Layer packages File for Spacemacs
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2021 Sylvain Benner & Contributors
 ;;
 ;; Author: Andrew Oppenlander <andrew.oppenlander@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
-;;; License: GPLv3
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 (setq pass-packages
       '(
         (ivy-pass :requires ivy)
         (helm-pass :requires helm)
+        auth-source-pass
         password-store
+        password-store-otp
         ))
 
 (defun pass/init-helm-pass ()
@@ -44,3 +58,22 @@
         "atPw" 'password-store-url
         "atP?" 'spacemacs/pass-describe
         "atPY" 'spacemacs/pass-copy-and-describe))))
+
+(defun pass/init-password-store-otp ()
+  (use-package password-store-otp
+    :defer t
+    :init
+    (progn
+      (spacemacs/declare-prefix "atPo" "otp")
+      (spacemacs/set-leader-keys
+        "atPoy" 'password-store-otp-token-copy
+        "atPoY" 'password-store-otp-uri-copy
+        "atPoi" 'password-store-otp-insert
+        "atPoa" 'password-store-otp-append
+        "atPoA" 'password-store-otp-append-from-image))))
+
+(defun pass/init-auth-source-pass ()
+  (use-package auth-source-pass
+    :after auth-source
+    :config
+    (auth-source-pass-enable)))

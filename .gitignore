@@ -23,6 +23,7 @@
 /.my-keybindings.el.swp
 /eww-bookmarks
 /history
+/image-dired
 /network-security.data
 /recentf
 /session.*
@@ -91,3 +92,6 @@ tags
 .tags
 !tags/
 gtags.files
+eln-cache/
+meghanada/
+vimish-fold/

@@ -78,7 +78,7 @@ It integrates with =company= and =flycheck=. In addition it also provides
 full graphical debugging support via =DAP mode=.
 
 LSP is the default backend used by this layer, see [[#choosing-a-backend][Choosing a backend]] in
-order to lean how to select a different backend.
+order to learn how to select a different backend.
 
 *** Installation
 The lsp server will be installed automatically whenever a Java file
@@ -134,6 +134,8 @@ at the root of your project first.
 | ~SPC m r c i~ | Convert to static import                 |
 | ~SPC m r a t~ | Add throws exception                     |
 | ~SPC m r a a~ | Assign all parameters to fields          |
+| ~SPC m r a F~ | Assign statement to field                |
+| ~SPC m r a l~ | Assign statement to local                |
 | ~SPC m r a f~ | Assign parameter to field                |
 | ~SPC m r g g~ | Generate getters/setters                 |
 | ~SPC m r g e~ | Generate =equals= and =hashCode= methods |

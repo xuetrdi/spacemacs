@@ -1,43 +1,53 @@
 ;;; packages.el --- Emacs Lisp Layer packages File for Spacemacs
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2021 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
-;;; License: GPLv3
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(setq emacs-lisp-packages
-      '(
-        auto-compile
-        company
-        (debug :location built-in)
-        (edebug :location built-in)
-        eldoc
-        elisp-slime-nav
-        (emacs-lisp :location built-in)
-        evil
-        evil-cleverparens
-        eval-sexp-fu
-        flycheck
-        flycheck-elsa
-        flycheck-package
-        ggtags
-        counsel-gtags
-        helm-gtags
-        (ielm :location built-in)
-        macrostep
-        nameless
-        overseer
-        parinfer
-        rainbow-identifiers
-        semantic
-        smartparens
-        srefactor
-        emr
-        ))
+
+(defconst emacs-lisp-packages
+  '(
+    auto-compile
+    company
+    (debug :location built-in)
+    (edebug :location built-in)
+    eldoc
+    elisp-slime-nav
+    (emacs-lisp :location built-in)
+    evil
+    evil-cleverparens
+    eval-sexp-fu
+    flycheck
+    flycheck-elsa
+    flycheck-package
+    ggtags
+    counsel-gtags
+    helm-gtags
+    (ielm :location built-in)
+    macrostep
+    nameless
+    overseer
+    rainbow-identifiers
+    semantic
+    smartparens
+    srefactor
+    emr))
 
 (defun emacs-lisp/init-ielm ()
   (use-package ielm
@@ -45,6 +55,14 @@
     :init
     (progn
       (spacemacs/register-repl 'ielm 'ielm)
+      ;; Load better help mode if helpful is installed
+      (if (configuration-layer/layer-used-p 'helpful)
+          (spacemacs/set-leader-keys-for-major-mode 'inferior-emacs-lisp-mode
+            "hh" 'helpful-at-point)
+        (spacemacs/set-leader-keys-for-major-mode 'inferior-emacs-lisp-mode
+          "hh" 'elisp-slime-nav-describe-elisp-thing-at-point))
+      (add-to-list 'spacemacs-jump-handlers-inferior-emacs-lisp-mode
+                   'elisp-slime-nav-find-elisp-thing-at-point)
       (dolist (mode '(emacs-lisp-mode lisp-interaction-mode))
         (spacemacs/declare-prefix-for-mode mode "ms" "ielm")
         (spacemacs/set-leader-keys-for-major-mode mode
@@ -84,6 +102,16 @@
         (spacemacs/set-leader-keys-for-major-mode mode
           "df" 'spacemacs/edebug-instrument-defun-on
           "dF" 'spacemacs/edebug-instrument-defun-off))
+      (spacemacs/declare-prefix-for-mode 'edebug-eval-mode "mg" "goto")
+      (spacemacs/declare-prefix-for-mode 'edebug-eval-mode "me" "eval")
+      (spacemacs/set-leader-keys-for-major-mode 'edebug-eval-mode
+        "gw" 'edebug-where
+        "a" 'edebug-delete-eval-item
+        "k" 'edebug-delete-eval-item
+        "," 'edebug-update-eval-list
+        "c" 'edebug-update-eval-list
+        "ee" 'edebug-eval-last-sexp
+        "eE" 'edebug-eval-print-last-sexp)
       ;; since we evilify `edebug-mode-map' we don't need to intercept it to
       ;; make it work with evil
       (evil-set-custom-state-maps
@@ -117,7 +145,7 @@
     :defer (spacemacs/defer)
     :init
     (progn
-      (spacemacs|require 'auto-compile)
+      (spacemacs|require-when-dumping 'auto-compile)
       (setq auto-compile-display-buffer nil
             ;; lets spaceline manage the mode-line
             auto-compile-use-mode-line nil
@@ -135,7 +163,7 @@
     :defer (spacemacs/defer)
     :init
     (progn
-      (spacemacs|require 'elisp-slime-nav)
+      (spacemacs|require-when-dumping 'elisp-slime-nav)
       (add-hook 'emacs-lisp-mode-hook 'elisp-slime-nav-mode)
       (dolist (mode '(emacs-lisp-mode lisp-interaction-mode))
         (spacemacs/declare-prefix-for-mode mode "mg" "find-symbol")
@@ -198,7 +226,7 @@
     :defer (spacemacs/defer)
     :init
     (progn
-      (spacemacs|require 'nameless)
+      (spacemacs|require-when-dumping 'nameless)
       (setq
        ;; always show the separator since it can have a semantic purpose
        ;; like in Spacemacs where - is variable and / is a function.
@@ -212,7 +240,8 @@
                                       ("S"  . "spacemacs")
                                       (".S"  . "dotspacemacs")
                                       ("CL" . "configuration-layer")))
-      ;; make `nameless-current-name' safe as a local variable for string values
+      ;; make `nameless-current-name' safe as a local variable for string
+      ;; values
       (put 'nameless-current-name 'safe-local-variable #'stringp)
       (spacemacs|diminish nameless-mode " 🅽" " [n]")
       (spacemacs|add-toggle nameless
@@ -223,9 +252,10 @@
         :evil-leader-for-mode (emacs-lisp-mode . "Tn"))
       ;; activate nameless only when in a GUI
       ;; in a terminal nameless triggers all sorts of graphical glitches.
-      (spacemacs|do-after-display-system-init
-       (when emacs-lisp-hide-namespace-prefix
-         (spacemacs/toggle-nameless-on-register-hook-emacs-lisp-mode))))))
+      (spacemacs|unless-dumping-and-eval-after-loaded-dump nameless
+        (spacemacs|do-after-display-system-init
+         (when emacs-lisp-hide-namespace-prefix
+           (spacemacs/toggle-nameless-on-register-hook-emacs-lisp-mode)))))))
 
 (defun emacs-lisp/init-overseer ()
   (use-package overseer
@@ -279,9 +309,6 @@
 (defun emacs-lisp/post-init-ggtags ()
   (add-hook 'emacs-lisp-mode-local-vars-hook #'spacemacs/ggtags-mode-enable))
 
-(defun emacs-lisp/post-init-parinfer ()
-  (add-hook 'emacs-lisp-mode-hook 'parinfer-mode))
-
 (defun emacs-lisp/post-init-rainbow-identifiers ()
   (add-hook 'emacs-lisp-mode-hook #'colors//rainbow-identifiers-ignore-keywords))
 
@@ -310,6 +337,7 @@
   (dolist (mode '(emacs-lisp-mode lisp-interaction-mode))
     (spacemacs/set-leader-keys-for-major-mode mode
       "ec" 'spacemacs/eval-current-form-sp
+      "e;" 'spacemacs/eval-current-form-to-comment-sp
       "es" 'spacemacs/eval-current-symbol-sp)))
 
 (defun emacs-lisp/init-emr ()

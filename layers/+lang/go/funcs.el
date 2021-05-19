@@ -1,55 +1,61 @@
 ;;; funcs.el --- Go Layer functions File for Spacemacs
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2021 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
-;;; License: GPLv3
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(defun spacemacs//go-backend ()
-  "Returns selected backend."
-  (if go-backend
-      go-backend
-    (cond
-     ((configuration-layer/layer-used-p 'lsp) 'lsp)
-     (t 'go-mode))))
 
 (defun spacemacs//go-setup-backend ()
   "Conditionally setup go backend"
-  (pcase (spacemacs//go-backend)
-    ('lsp (spacemacs//go-setup-backend-lsp))))
+  (when (eq go-backend 'lsp)
+    (spacemacs//go-setup-backend-lsp)))
 
 (defun spacemacs//go-setup-company ()
   "Conditionally setup go company based on backend"
-  (pcase (spacemacs//go-backend)
-    ('go-mode (spacemacs//go-setup-company-go))))
+  (pcase go-backend
+    ('go-mode (spacemacs|add-company-backends
+                :backends company-go
+                :modes go-mode
+                :variables company-go-show-annotation t
+                :append-hooks nil
+                :call-hooks t))
+    ('lsp (spacemacs|add-company-backends
+            :backends company-capf
+            :modes go-mode))))
 
 (defun spacemacs//go-setup-eldoc ()
   "Conditionally setup go eldoc based on backend"
-  (pcase (spacemacs//go-backend)
-    ('go-mode (go-eldoc-setup))))
-
+  (when (eq go-backend 'go-mode)
+    (go-eldoc-setup)))
 
 (defun spacemacs//go-setup-dap ()
   "Conditionally setup go DAP integration."
   ;; currently DAP is only available using LSP
-  (pcase (spacemacs//go-backend)
-    (`lsp (spacemacs//go-setup-lsp-dap))))
+  (when (eq go-backend 'lsp)
+    (require 'dap-go)
+    (dap-go-setup)))
 
-
-;; go-mode
-
-(defun spacemacs//go-setup-company-go ()
-  (spacemacs|add-company-backends
-    :backends company-go
-    :modes go-mode
-    :variables company-go-show-annotation t
-    :append-hooks nil
-    :call-hooks t)
-  (company-mode))
+(defun spacemacs//go-setup-format ()
+  "Conditionally setup format on save."
+  (if go-format-before-save
+      (add-hook 'before-save-hook 'gofmt-before-save)
+    (remove-hook 'before-save-hook 'gofmt-before-save)))
 
 
 ;; lsp
@@ -58,24 +64,13 @@
   "Setup lsp backend"
   (if (configuration-layer/layer-used-p 'lsp)
       (progn
-        ;; without setting lsp-diagnostic-package to :none
+        ;; without setting lsp-diagnostics-provider to :none
         ;; golangci-lint errors won't be reported
         (when go-use-golangci-lint
-          (message "[go] Setting lsp-diagnostic-package :none to enable golangci-lint support.")
-          (setq-local lsp-diagnostic-provider :none))
+          (message "[go] Setting lsp-diagnostics-provider :none to enable golangci-lint support.")
+          (setq-local lsp-diagnostics-provider :none))
         (lsp))
     (message "`lsp' layer is not installed, please add `lsp' layer to your dotfile.")))
-
-(defun spacemacs//go-setup-dap ()
-  "Conditionally setup go DAP integration."
-  ;; currently DAP is only available using LSP
-  (pcase (spacemacs//go-backend)
-    (`lsp (spacemacs//go-setup-lsp-dap))))
-
-(defun spacemacs//go-setup-lsp-dap ()
-  "Setup DAP integration."
-  (require 'dap-go)
-  (dap-go-setup))
 
 
 ;; flycheck
